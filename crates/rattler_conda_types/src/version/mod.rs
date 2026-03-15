@@ -459,10 +459,11 @@ impl Version {
                 flags = flags.with_has_epoch(true);
             }
 
-            // Copy the segments
+            // Copy the segments. We skip the implicit default `0` component
             for segment_iter in self.segments() {
                 segments.push(segment_iter.segment);
-                for component in segment_iter.components() {
+                let implicit_default = usize::from(segment_iter.has_implicit_default());
+                for component in segment_iter.components().skip(implicit_default) {
                     components.push(component.clone());
                 }
             }
@@ -506,7 +507,9 @@ impl Version {
                 .with_local_segment_index(segments.len() as u8)
                 .ok_or(VersionExtendError::VersionTooLong)?;
             for segment_iter in self.local_segments() {
-                for component in segment_iter.components().cloned() {
+                // Skip the implicit default `0` for the same reason 
+                let implicit_default = usize::from(segment_iter.has_implicit_default());
+                for component in segment_iter.components().skip(implicit_default).cloned() {
                     components.push(component);
                 }
                 segments.push(segment_iter.segment);
@@ -1523,12 +1526,40 @@ mod test {
         );
     }
 
+    /// Regression test: strip_local() must not double the implicit `0` that is
+    /// prepended before letter-initial segments (has_implicit_default=true).
+    #[test]
+    fn strip_local_letter_initial_segment() {
+        for (input, expected) in [
+            ("1.0.rc2+build.5", "1.0.rc2"),
+            ("2.3.alpha1+git.abc", "2.3.alpha1"),
+            ("1.0a3+local", "1.0a3"),
+        ] {
+            let stripped = Version::from_str(input).unwrap().strip_local().into_owned();
+            let want = Version::from_str(expected).unwrap();
+            assert_eq!(
+                stripped, want,
+                "strip_local({input}) produced {stripped} instead of {expected}"
+            );
+            // Also verifying the string round-trip so display/serialize are clean.
+            assert_eq!(
+                stripped.to_string(),
+                expected,
+                "strip_local({input}).to_string() produced wrong output"
+            );
+        }
+    }
+
     #[rstest]
     #[case("1", 3, "1.0.0")]
     #[case("1.2", 3, "1.2.0")]
     #[case("1.2+3.4", 3, "1.2.0+3.4")]
     #[case("4!1.2+3.4", 3, "4!1.2.0+3.4")]
     #[case("4!1.2+3.4", 5, "4!1.2.0.0.0+3.4")]
+    // Regression: local segments with letter-initial components (has_implicit_default=true)
+    // must not have their implicit `0` doubled after extend_to_length copies them.
+    #[case("1.2+alpha.1", 3, "1.2.0+alpha.1")]
+    #[case("1.2+rc2", 3, "1.2.0+rc2")]
     #[test]
     fn extend_to_length(#[case] version: &str, #[case] elements: usize, #[case] expected: &str) {
         assert_eq!(
