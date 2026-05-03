@@ -229,7 +229,7 @@ pub async fn extract_conda_via_buffering(
 
 /// Returns the ZIP entry prefix (`"info-"` or `"pkg-"`) that contains the
 /// given `target_path` inside a `.conda` archive.
-#[cfg(feature = "reqwest")]
+#[cfg(any(feature = "reqwest", feature = "reqwest-wasm"))]
 pub(crate) fn conda_entry_prefix(target_path: &Path) -> &'static str {
     if target_path.starts_with("info") {
         "info-"
@@ -243,7 +243,7 @@ pub(crate) fn conda_entry_prefix(target_path: &Path) -> &'static str {
 /// Iterates entries of a tar archive, returning the contents of the first
 /// entry whose path matches `file_name`. Because the reader is streaming,
 /// only the bytes up to (and including) the target entry are consumed.
-#[cfg(feature = "reqwest")]
+#[cfg(any(feature = "reqwest", feature = "reqwest-wasm"))]
 pub(crate) async fn get_file_from_tar_archive<R: tokio::io::AsyncRead + Unpin>(
     archive: &mut tokio_tar::Archive<R>,
     file_name: &Path,
@@ -265,7 +265,7 @@ pub(crate) async fn get_file_from_tar_archive<R: tokio::io::AsyncRead + Unpin>(
     Ok(None)
 }
 
-#[cfg(all(test, feature = "reqwest"))]
+#[cfg(all(test, any(feature = "reqwest", feature = "reqwest-wasm")))]
 mod tests {
     use super::conda_entry_prefix;
     use std::path::Path;

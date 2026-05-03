@@ -6,6 +6,7 @@ mod package_record;
 mod parse_strictness;
 mod platform;
 pub mod solve;
+pub mod sparse_fetch;
 mod utils;
 mod version;
 mod version_spec;

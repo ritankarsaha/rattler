@@ -8,13 +8,13 @@ use zip::result::ZipError;
 
 use rattler_digest::{Md5Hash, Sha256Hash};
 
-#[cfg(feature = "reqwest")]
+#[cfg(any(feature = "reqwest", feature = "reqwest-wasm"))]
 use rattler_redaction::Redact;
 
 pub mod read;
 pub mod seek;
 
-#[cfg(feature = "reqwest")]
+#[cfg(any(feature = "reqwest", feature = "reqwest-wasm"))]
 pub mod reqwest;
 
 pub mod fs;
@@ -45,7 +45,7 @@ pub enum ExtractError {
     #[error("invalid zip archive: {0}")]
     ZipError(#[source] zip::result::ZipError),
 
-    #[cfg(feature = "reqwest")]
+    #[cfg(any(feature = "reqwest", feature = "reqwest-wasm"))]
     #[error("invalid zip archive (async): {0}")]
     AsyncZipError(#[from] async_zip::error::ZipError),
 
@@ -55,7 +55,7 @@ pub enum ExtractError {
     #[error("unsupported compression method")]
     UnsupportedCompressionMethod,
 
-    #[cfg(feature = "reqwest")]
+    #[cfg(any(feature = "reqwest", feature = "reqwest-wasm"))]
     #[error(transparent)]
     ReqwestError(::reqwest_middleware::Error),
 
@@ -102,7 +102,7 @@ impl ExtractError {
             // TODO: Add more specific checks for transient I/O errors
             ExtractError::IoError(_) => true,
             ExtractError::CouldNotCreateDestination(_) => true,
-            #[cfg(feature = "reqwest")]
+            #[cfg(any(feature = "reqwest", feature = "reqwest-wasm"))]
             ExtractError::ReqwestError(err) => {
                 // Check if this is a connection error (includes broken pipe during connection)
                 match err {
@@ -117,7 +117,7 @@ impl ExtractError {
     }
 }
 
-#[cfg(feature = "reqwest")]
+#[cfg(any(feature = "reqwest", feature = "reqwest-wasm"))]
 impl From<::reqwest_middleware::Error> for ExtractError {
     fn from(err: ::reqwest_middleware::Error) -> Self {
         ExtractError::ReqwestError(err.redact())

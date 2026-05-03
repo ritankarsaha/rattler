@@ -31,17 +31,19 @@
 //! # }
 //! ```
 
-use async_http_range_reader::AsyncHttpRangeReaderError;
 use rattler_conda_types::package::PackageFile;
 use reqwest_middleware::ClientWithMiddleware;
+#[cfg(feature = "reqwest")]
 use tracing::debug;
 use url::Url;
 
 pub use super::full_download::{
     fetch_file_from_remote_full_download, fetch_package_file_full_download,
 };
-use super::sparse::fetch_package_file_sparse;
-use crate::reqwest::sparse::fetch_file_from_remote_sparse;
+#[cfg(feature = "reqwest")]
+use super::sparse::{fetch_file_from_remote_sparse, fetch_package_file_sparse};
+#[cfg(feature = "reqwest")]
+use async_http_range_reader::AsyncHttpRangeReaderError;
 use crate::ExtractError;
 
 /// Fetch and parse a specific [`PackageFile`] from a remote package.
@@ -89,6 +91,8 @@ pub async fn fetch_package_file_from_remote_url<P: PackageFile>(
     client: ClientWithMiddleware,
     url: Url,
 ) -> Result<P, ExtractError> {
+    // On WASM the `async_http_range_reader` crate uses `memmap2` anonymous memory maps
+    #[cfg(feature = "reqwest")]
     match fetch_package_file_sparse::<P>(client.clone(), url.clone()).await {
         Ok(result) => return Ok(result),
         Err(ExtractError::UnsupportedArchiveType) => {
@@ -123,6 +127,8 @@ pub async fn fetch_file_from_remote_url(
     url: Url,
     target_path: &std::path::Path,
 ) -> Result<Option<Vec<u8>>, ExtractError> {
+    // `fetch_package_file_from_remote_url` for why the sparse path is gated.
+    #[cfg(feature = "reqwest")]
     match fetch_file_from_remote_sparse(client.clone(), url.clone(), target_path).await {
         Ok(result) => return Ok(result),
         Err(ExtractError::UnsupportedArchiveType) => {

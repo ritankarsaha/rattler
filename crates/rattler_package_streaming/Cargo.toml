@@ -71,6 +71,10 @@ reqwest = [
   "dep:http",
   "dep:async_http_range_reader",
 ]
+reqwest-wasm = [
+  "dep:reqwest-middleware",
+  "dep:reqwest",
+]
 wasm = ["zstd/wasm"]
 
 [package.metadata.docs.rs]

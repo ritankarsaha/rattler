@@ -3,6 +3,7 @@ use rattler_conda_types::{
     InvalidPackageNameError, ParseChannelError, ParseMatchSpecError, ParsePlatformError,
     ParseVersionError, VersionBumpError, VersionExtendError,
 };
+use rattler_package_streaming::ExtractError;
 use rattler_repodata_gateway::GatewayError;
 use rattler_solve::SolveError;
 use thiserror::Error;
@@ -36,6 +37,10 @@ pub enum JsError {
     InvalidHexMd5(String),
     #[error("{0} is not a valid hex encoded SHA256 hash")]
     InvalidHexSha256(String),
+    #[error("invalid URL: {0}")]
+    UrlParse(#[from] url::ParseError),
+    #[error(transparent)]
+    ExtractError(#[from] ExtractError),
 }
 
 pub type JsResult<T> = Result<T, JsError>;
