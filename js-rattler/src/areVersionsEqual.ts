@@ -21,12 +21,11 @@ expect.addEqualityTesters([areVersionsEqual]);
 
 
 
-main -> branch-name (pr krke dikhaya)
-     
-
-main -> pr2 (pr2 doesn't have any changes you made on branch-name, it is a fresh copy of main )
+dashboard
 
 
-
-I am ritankar
+footer
     
+
+
+UI CHANGES PR 
