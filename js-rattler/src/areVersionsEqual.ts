@@ -10,7 +10,7 @@ function areVersionsEqual(a: unknown, b: unknown): boolean | undefined {
     } else if (isAVersion === isBVersion) {
         return undefined;
     } else {
-        return false;
+        return  false;
     }
 }
 
